@@ -34,7 +34,7 @@ return {
   loadUserData=loadUserData -- 高级，选用（目前暂不开放）
 }
 
--- 还允许直接返回决策函数
+-- 还允许直接返回决策函数(省略了其他高级功能)
 -- return decide
 ```
 
