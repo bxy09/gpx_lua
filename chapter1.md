@@ -1,3 +1,36 @@
-# First Chapter
+# 基本编程框架
 
-GitBook allows you to organize your book into chapters, each chapter is stored in a separate file like this one.
+目前，用户所写的脚本的基本结构如下所示：
+```
+--------------------------
+-- 用户的全局数据初始化区域 --
+-------------------------
+globalValue = 0
+
+------------------
+-- 用户定义的函数 --
+------------------
+-- （必备）决策函数，被新的行情信息触发，做出交易决策
+function decide()
+end
+-- （高级）消息处理函数，实盘运行中，被一些特殊消息所触发(例如，标的中有股票进行了复权)
+--  该功能尚在开发之中，将在近期实用以及公布相关标准
+function handleMessage(msg)
+end
+-- (高级) 数据导入函数，实盘运行中，程序可能因为各种原因被迫中断。
+-- 我们允许用户在决策函数中，调用函数store(table)将数据存入到我们的稳定数据存储中。
+-- 用户的程序在重新启动后，我们将首先调用该函数，还原用户之前的运行状态。
+--  该功能尚在开发之中，将在近期实用以及公布相关标准
+function load(table)
+end
+
+---------------------
+-- 输出用户选用的函数 --
+---------------------
+-- 脚本返回一个 table，其中至少包含决策函数
+return {
+  decide=decide
+  handleMessage=handleMessage -- 高级，选用（目前暂不开放）
+  load=load -- 高级，选用（目前暂不开放）
+}
+```
