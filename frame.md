@@ -18,21 +18,24 @@ end
 function handleMessage(msg)
 end
 -- (高级) 数据导入函数，实盘运行中，程序可能因为各种原因被迫中断。
--- 我们允许用户在决策函数中，调用函数saveUserData(table)将数据存入到我们的稳定数据存储中。
+-- 我们允许用户在决策函数中，调用函数saveUserData(data)将数据存入到我们的稳定数据存储中。
 -- 用户的程序在重新启动后，我们将首先调用该函数，还原用户之前的运行状态。
 --  该功能尚在开发之中，将在近期实用以及公布相关标准
-function loadUserData(table)
+function loadUserData(data)
 end
 
----------------------
--- 输出用户选用的函数 --
----------------------
+----------------------
+-- 输出需要被调用的函数 --
+----------------------
 -- 脚本返回一个 table，其中至少包含决策函数
 return {
   decide=decide
   handleMessage=handleMessage -- 高级，选用（目前暂不开放）
-  load=load -- 高级，选用（目前暂不开放）
+  loadUserData=loadUserData -- 高级，选用（目前暂不开放）
 }
+
+-- 还允许直接返回决策函数
+-- return decide
 ```
 
 [回到目录](README.md)
