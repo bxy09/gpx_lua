@@ -58,7 +58,7 @@ LMA90 : REF(1,MA90);
 
 如果需要将以上策略加入止损比率，则代码应该如下（因为不使用遗传算法，因此“可以使用的公式值的数量”填0）：
 
-```
+```lua
 --[[ This is the example codes for the moving average crossover strategy
 lua策略简单样例，该策略是均线交叉策略，20日均线上传90日均线则全仓买入，20日
 均线下穿90日均线则全仓卖出
