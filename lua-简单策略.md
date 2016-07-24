@@ -126,7 +126,7 @@ LMA90 : REF(1,MA90);
 
 如果需要将20日均线利用遗传算法进行优化成某表达式，并将该表达式和90日均线进行金叉死叉策略，则可以使用以下代码（因为需要使用遗传算法优化两个表达式，因此“可以使用的公式值的数量”填1）：
 
-```
+```lua
 --[[ This is the example codes for the moving average crossover strategy with genetic programming
 lua策略简单样例，该策略的模型框架依然是均线交叉策略，但是具体哪些表达式构成金叉死叉
 则是交给遗传算法训练出来
