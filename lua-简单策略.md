@@ -6,51 +6,50 @@
 
 ```lua
 --[[ This is the example codes for the moving average crossover strategy
-lua策略简单样例，该策略是均线交叉策略，20日均线上传90日均线则全仓买入，20日
-均线下穿90日均线则全仓卖出
+lua策略简单样例，该策略是均线交叉策略，5日均线上传10日均线则全仓买入，5日(短期)
+均线下穿10日(长期)均线则全仓卖出
 无止损
 无遗传算法优化
 --]]
 return function ()
     local pv = portfolio.portfolioValue() -- 股票账户价值
-    print("pv:",pv,"cash:",portfolio.cash()) -- 打印股票账户价值到屏幕
+    print("pv:",pv,"cash:",portfolio.cash()) -- 打印股票账户价值到策略输出日志
     local eachTargetMoney = pv/#universe -- 每只股票分得的操作资金
-    print("eachTargetMoney:",eachTargetMoney) -- 打印每只股票分得的操作资金到屏幕
-    for target, stat in pairs(bar()) do -- for循环遍历每只股票
-          local po = portfolio.position(target) -- 股票持仓状态
+    print("eachTargetMoney:",eachTargetMoney) -- 打印每只股票分得的操作资金到策略输出日志
+    for target, stat in pairs(bar()) do  --for循环遍历每只股票
+        local po = portfolio.position(target) -- 股票持仓状态
+        local MAS = stat['MA5'] -- 5日均线(短期)，续在“高阶指标数据项”内添加5日均线
+        local MAL = stat['MA10'] -- 10日均线(长期)，续在“高阶指标数据项”内添加10日均线
+        local LMAS = stat['LMA5'] -- 前一日5日均线值，续在“高阶指标数据项”用ref函数添加前一日5日均线
+        local LMAL = stat['LMA10'] -- 前一日10日均线值，续在“高阶指标数据项”用ref函数添加前一日10日均线
+        local price = stat['CLOSE'] -- 当前股价
 
-          local MA20 = stat['MA20'] -- 20日均线，续在“高阶指标数据项”内添加20日均线
-          local MA90 = stat['MA90'] -- 90日均线，续在“高阶指标数据项”内添加90日均线
-          local LMA20 = stat['LMA20'] -- 前一日20日均线值，续在“高阶指标数据项”用ref函数添加前一日20日均线
-          local LMA90 = stat['LMA90'] -- 前一日90日均线值，续在“高阶指标数据项”用ref函数添加前一日90日均线
-          local price = stat['CLOSE'] -- 当前股价
-
-          -- 以下是策略逻辑
-          local want = (function()
-            if MA20 > MA90 and LMA20 < LMA90 and po.quantity == 0 then
-              return eachTargetMoney/price -- 触发买入
+        -- 以下是策略逻辑
+        local want = (function()
+            if MAS > MAL and LMAS < LMAL and po.quantity == 0 then
+                return eachTargetMoney/price -- 触发买入
             end
-            if MA20 < MA90 and LMA20 > LMA90 and po.quantity > 0 then
-              return 0 -- 触发卖出
+            if MAS < MAL and LMAS > LMAL and po.quantity > 0 then
+                return 0 -- 触发卖出
             end
             return po.quantity -- 保持持仓
-          end)()
+        end)()
 
-          if po.quantity ~= want then
-              ret = orderShares(target, want-po.quantity) -- 下单
-              --print("order :",ret,",",want,",",po)
-          end
-      end
-  end
+        if po.quantity ~= want then
+            ret = orderShares(target, want-po.quantity) -- 下单
+            --print("order :",ret,",",want,",",po)
+        end
+    end
+end
 ```
 
 高阶指标数据项应该填入以下内容：
 
 ```
-MA20 : MA(20,CLOSE);
-MA90 : MA(90,CLOSE);
-LMA20 : REF(1,MA20);
-LMA90 : REF(1,MA90);
+MA5   : MA(5,CLOSE);
+MA10  : MA(10,CLOSE);
+LMA5  : REF(1,MA5);
+LMA10 : REF(1,MA10);
 ```
 
 高阶指标数据的填入方式为：
@@ -65,67 +64,65 @@ LMA90 : REF(1,MA90);
 
 ```lua
 --[[ This is the example codes for the moving average crossover strategy
-lua策略简单样例，该策略是均线交叉策略，20日均线上传90日均线则全仓买入，20日
-均线下穿90日均线则全仓卖出
-有止损，止损设置在5%
+lua策略简单样例，该策略是均线交叉策略，5日均线上传10日均线则全仓买入，5日
+均线下穿10日均线则全仓卖出
+有止损，止损设置在20%
 无遗传算法优化
 --]]
-local drawdownrate = 0.05 --定义止损比率
+local drawdownrate = 0.20 --定义止损比率
 local hightable = {} -- 定义最高价table
 return function ()
     local pv = portfolio.portfolioValue() -- 股票账户价值
-    print("pv:",pv,"cash:",portfolio.cash()) -- 打印股票账户价值到屏幕
+    print("pv:",pv,"cash:",portfolio.cash()) -- 打印股票账户价值到策略输出日志
     local eachTargetMoney = pv/#universe -- 每只股票分得的操作资金
-    print("eachTargetMoney:",eachTargetMoney) -- 打印每只股票分得的操作资金到屏幕
+    print("eachTargetMoney:",eachTargetMoney) -- 打印每只股票分得的操作资金到策略输出日志
     for target, stat in pairs(bar()) do -- for循环遍历每只股票
-          local po = portfolio.position(target) -- 股票持仓状态
+        local po = portfolio.position(target) -- 股票持仓状态
+        local high = stat['HIGH'] -- 最高价，用于止损的计算
+        local MAS = stat['MA5'] -- 5日均线，续在“高阶指标数据项”内添加5日均线
+        local MAL = stat['MA10'] -- 10日均线，续在“高阶指标数据项”内添加10日均线
+        local LMAS = stat['LMA5'] -- 前一日5日均线值，续在“高阶指标数据项”用ref函数添加前一日5日均线
+        local LMAL = stat['LMA10'] -- 前一日10日均线值，续在“高阶指标数据项”用ref函数添加前一日10日均线
+        local price = stat['CLOSE'] -- 当前股价
 
-          local high = stat['HIGH'] -- 最高价，用于止损的计算
-          local MA20 = stat['MA20'] -- 20日均线，续在“高阶指标数据项”内添加20日均线
-          local MA90 = stat['MA90'] -- 90日均线，续在“高阶指标数据项”内添加90日均线
-          local LMA20 = stat['LMA20'] -- 前一日20日均线值，续在“高阶指标数据项”用ref函数添加前一日20日均线
-          local LMA90 = stat['LMA90'] -- 前一日90日均线值，续在“高阶指标数据项”用ref函数添加前一日90日均线
-          local price = stat['CLOSE'] -- 当前股价
-
-          -- 同步hightable
-          if po.quantity > 0 then
-              if hightable[target] == nil or hightable[target]<high then
-                  hightable[target] = high
-              end
-          else
-              hightable[target] = nil 
-          end
-
-          -- 以下是策略逻辑
-          local want = (function()
-            if hightable[target] ~= nil and price<(1-drawdownrate)*hightable[target] then
-              return 0 -- 触发止损
-            end  
-            if MA20 > MA90 and LMA20 < LMA90 and po.quantity == 0 then
-              return eachTargetMoney/price -- 触发买入
+        -- 同步hightable
+        if po.quantity > 0 then
+            if hightable[target] == nil or hightable[target]<high then
+                hightable[target] = high
             end
-            if MA20 < MA90 and LMA20 > LMA90 and po.quantity > 0 then
-              return 0 -- 触发卖出
+        else
+            hightable[target] = nil
+        end
+
+        -- 以下是策略逻辑
+        local want = (function()
+            if hightable[target] ~= nil and price<(1-drawdownrate)*hightable[target] then
+                return 0 -- 触发止损
+            end
+            if MAS > MAL and LMAS < LMAL and po.quantity == 0 then
+                return eachTargetMoney/price -- 触发买入
+            end
+            if MAS < MAL and LMAS > LMAL and po.quantity > 0 then
+                return 0 -- 触发卖出
             end
             return po.quantity
-          end)()
+        end)()
 
-          if po.quantity ~= want then
-              ret = orderShares(target, want-po.quantity) -- 下单
-              --print("order :",ret,",",want,",",po)
-          end
-      end
-  end
+        if po.quantity ~= want then
+            ret = orderShares(target, want-po.quantity) -- 下单
+            --print("order :",ret,",",want,",",po)
+        end
+    end
+end
 ```
 
 高阶指标数据项应该填入以下内容：
 
 ```
-MA20 : MA(20,CLOSE);
-MA90 : MA(90,CLOSE);
-LMA20 : REF(1,MA20);
-LMA90 : REF(1,MA90);
-
+MA5   : MA(5,CLOSE);
+MA10  : MA(10,CLOSE);
+LMA5  : REF(1,MA5);
+LMA10 : REF(1,MA10);
 ```
 
 ### 简单均线交叉加止损，并且加入遗传算法优化
@@ -144,65 +141,253 @@ local hightable = {} -- 定义最高价table
 local lastformula1 = {} -- 定义公式1上一期table
 return function ()
     local pv = portfolio.portfolioValue() -- 股票账户价值
-    print("pv:",pv,"cash:",portfolio.cash()) -- 打印股票账户价值到屏幕
+    print("pv:",pv,"cash:",portfolio.cash()) -- 打印股票账户价值到策略输出日志
     local eachTargetMoney = pv/#universe -- 每只股票分得的操作资金
-    print("eachTargetMoney:",eachTargetMoney) -- 打印每只股票分得的操作资金到屏幕
+    print("eachTargetMoney:",eachTargetMoney) -- 打印每只股票分得的操作资金到策略输出日志
     for target, stat in pairs(bar()) do -- for循环遍历每只股票
-          local po = portfolio.position(target) -- 股票持仓状态
+        local po = portfolio.position(target) -- 股票持仓状态
+        local high = stat['HIGH'] -- 最高价，用于止损计算
+        local MAS= stat['MA5'] -- 5日均线，续在“高阶指标数据项”内添加20日均线
+        --local MAL = stat['MA10'] -- 10日均线，续在“高阶指标数据项”内添加90日均线
+        local LMAS = stat['LMA5']
+        local price = stat['CLOSE'] -- 当前股价
+        local formula1 = formula(target,0) -- 训练表达式1，第二个参数是计数，lua语言从0开始计数
+        print("formula1:",formula1)
+        local lformula1 = lastformula1[target] -- 昨日表达式1的值
+        print("lformula1:",lformula1)
 
-          local high = stat['HIGH'] -- 最高价，用于止损计算
-          local MA20 = stat['MA20'] -- 20日均线，续在“高阶指标数据项”内添加20日均线
-          local MA90 = stat['MA90'] -- 90日均线，续在“高阶指标数据项”内添加90日均线
-          local LMA90 = stat['LMA90']
-          local price = stat['CLOSE'] -- 当前股价
-          local formula1 = formula(target,0) -- 训练表达式1，第二个参数是计数，lua语言从0开始计数
-          print("formula1:",formula1)
-          local lformula1 = lastformula1[target] -- 昨日表达式1的值
-          print("lformula1:",lformula1)
+        -- 同步hightable，用于止损计算
+        if po.quantity > 0 then
+            if hightable[target] == nil or hightable[target]<high then
+                hightable[target] = high
+            end
+        else
+            hightable[target] = nil
+        end
 
-          -- 同步hightable，用于止损计算
-          if po.quantity > 0 then
-              if hightable[target] == nil or hightable[target]<high then
-                  hightable[target] = high
-              end
-          else
-              hightable[target] = nil 
-          end
+        -- 以下是策略逻辑
+        local conditionStopLoss = hightable[target] ~= nil and price<(1-drawdownrate)*hightable[target]
+        local conditionBuy = formula1 ~= nil and lformula1 ~= nil
+                and formula1 > MAS and lformula1 < LMAS and po.quantity == 0
+        local conditionSell = formula1 ~= nil and lformula1 ~= nil
+                and formula1 < MAS and lformula1 > LMAS and po.quantity > 0
 
-          -- 以下是策略逻辑
-          local conditionStopLoss = hightable[target] ~= nil and price<(1-drawdownrate)*hightable[target]
-          local conditionBuy = formula1 ~= nil and lformula1 ~= nil
-                and formula1 > MA90 and lformula1 < LMA90 and po.quantity == 0
-          local conditionSell = formula1 ~= nil and lformula1 ~= nil
-                and formula1 < MA90 and lformula1 > LMA90 and po.quantity > 0
-
-          local want = (function()
+        local want = (function()
             if conditionStopLoss then
-              return 0 -- 触发止损
+                return 0 -- 触发止损
             end
             if conditionBuy then
-              return eachTargetMoney/price -- 触发买入
+                return eachTargetMoney/price -- 触发买入
             end
             if conditionSell then
-              return 0 -- 触发卖出
+                return 0 -- 触发卖出
             end
             return po.quantity
-          end)()
+        end)()
 
-          if po.quantity ~= want then
-              ret = orderShares(target, want-po.quantity) -- 下单
-              --print("order :",ret,",",want,",",po)
-          end
-          lastformula1[target] = formula1 -- 记录公式1值，提供给下一周期的计算
-      end
-  end
+        if po.quantity ~= want then
+            ret = orderShares(target, want-po.quantity) -- 下单
+            --print("order :",ret,",",want,",",po)
+        end
+        lastformula1[target] = formula1 -- 记录公式1值，提供给下一周期的计算
+    end
+end
 ```
 
 高阶指标数据项应该填写如下：
 
 ```
-MA20 : MA(20,CLOSE);
-MA90 : MA(90,CLOSE);
-LMA90 : REF(1,MA90);
+MA5   : MA(5,CLOSE);
+MA10  : MA(10,CLOSE);
+LMA5  : REF(1,MA5);
+LMA10 : REF(1,MA10);
 ```
 
+### 排序买入策略
+
+```lua
+local num = 5
+local adratio = 0.1
+local baratio = 0.05
+return function ()
+    local formulasort = {}
+    local winnertable = {}
+    local holdtable = {}
+    local pv = portfolio.portfolioValue()
+    local targetvalue = pv/num
+    print("pv:",pv,"cash:",portfolio.cash(),"现金占比： ",portfolio.cash()/pv)
+    local eachTargetUplimit = pv/num*(1+adratio)
+    local cash = portfolio.cash()
+
+    local function intable(item, table)
+        for k,v in pairs(table) do
+            if item == v then
+                return true
+            end
+        end
+        return false
+    end
+
+    for target, stat in pairs(bar()) do
+        local po = portfolio.position(target)
+        local formula1 = formula(target,0)
+        local price = stat['CLOSE']
+        --print(target,price)
+        table.insert(formulasort,{symbol = target, val = formula1})
+        if po.quantity >0 then
+            print("now i have :", target)
+            table.insert(holdtable,target)
+        end
+    end
+    table.sort(formulasort,function(a,b) return a.val>b.val end )
+
+    --获取winnertable
+    for i=1, num do
+        print(formulasort[i].symbol, formulasort[i].val)
+        table.insert (winnertable, formulasort[i].symbol)
+    end
+    --获取winnertable结束
+
+    --卖出操作
+    for k,target in pairs(holdtable) do
+        print("空table不会运行")
+        if intable(target,winnertable) then
+            print("先不卖出", target)
+        else
+            print("卖出", target)
+            ret = orderShares(target, -portfolio.position(target).sellable)
+        end
+
+        print("卖出操作后，现金： " ,portfolio.cash(),"现金占比： ",portfolio.cash()/pv)
+        --adjust ratio
+        print(portfolio.position(target).value,"----",eachTargetUplimit)
+        if portfolio.position(target).value > eachTargetUplimit then
+            ret = orderValue(target, math.floor(pv*(1+baratio)/num-portfolio.position(target).value ))
+            print("调整仓位到适当水平：" ,target, ret)
+        end
+        print("调整操作后，现金： " ,portfolio.cash(),"现金占比： ",portfolio.cash()/pv)
+    end
+    --卖出操作结束
+
+    --买入操作
+    local buytable = {}
+    local sbuytable = {}
+    for k,target in pairs(winnertable) do
+        --如果在adratio上下范围内，那就不调整。否则调整到pv/num水平附近
+        --只考虑买入方向
+        rtargetvalue = portfolio.position(target).value
+
+        if rtargetvalue < targetvalue*(1+adratio) and rtargetvalue > targetvalue*(1-adratio) then
+            print("不买入")
+        else
+            if rtargetvalue < targetvalue*(1-adratio) then
+                if portfolio.position(target).value == 0 then
+                    table.insert(buytable,target)
+                else
+                    table.insert(sbuytable,target)
+                end
+            end
+        end
+
+    end
+    cash = portfolio.cash()
+    for k,target in pairs(buytable) do
+        ret = orderValue(target, cash/#buytable )
+        print("买入操作：" ,target, ret)
+    end
+    cash = portfolio.cash()
+    for k,target in pairs(sbuytable) do
+        ret = orderValue(target, cash/#sbuytable )
+        print("买入操作：" ,target, ret)
+    end
+
+    print("买入操作后，现金： " ,portfolio.cash(),"现金占比： ",portfolio.cash()/pv)
+    --买入操作结束
+end
+```
+
+### 趋势跟踪策略
+
+```lua
+local drawdownrate = 0.05
+local lastformula1 = {}
+local lastformula2 = {}
+local hightable = {}
+return function ()
+    local pv = portfolio.portfolioValue()
+    print("pv:",pv,"cash:",portfolio.cash())
+    local eachTargetMoney = pv/#universe
+    print("eachTargetMoney:",eachTargetMoney)
+    for target, stat in pairs(bar()) do
+        local po = portfolio.position(target)
+
+        local MA5 = stat['MA5']
+
+        local price = stat['CLOSE']
+        local high = stat['HIGH']
+        local formula1 = formula(target,0)
+        local formula2 = formula(target,1)
+
+
+        local lformula1 = lastformula1[target]
+        local lformula2 = lastformula2[target]
+
+        -- 同步hightable
+        if po.quantity > 0 then
+            if hightable[target] == nil or hightable[target]<high then
+                hightable[target] = high
+            end
+        else
+            hightable[target] = nil
+        end
+
+        local conditionA = formula1 ~= nil and formula1 > MA5
+        local conditionB = formula1 ~= nil and formula1 <= MA5
+        local conditiondrawback = hightable[target] ~= nil and price<(1-drawdownrate)*hightable[target]
+
+        print(target, ' his-high is ',hightable[target])
+        -- 结束同步hightable
+
+        local want = (function()
+            if conditiondrawback then
+                return 0
+            end
+            if conditionA and po.quantity > 0 and po.quantity*price/eachTargetMoney<=ratio*1.05 then
+                return eachTargetMoney/price
+            end
+            if conditionA and po.quantity == 0 then
+                return (eachTargetMoney*ratio)/price
+            end
+            if conditionB and po.quantity > 0 then
+                return 0
+            end
+            if conditionB and po.quantity == 0 then
+                return po.quantity
+            end
+            return po.quantity
+        end)()
+
+        print(target.." po.quantity before transaction :  "..po.quantity.."sellable is : "..po.sellable)
+        print("target :   ".. target .. "want :   ".. want.."position:   ".. po.quantity .."sellable is :   ".. po.sellable)
+        print("target :   ", target , "condition buy :   ", conditionA , "condition sell :   " , conditionB, "conditiondrawback : " ,conditiondrawback )
+        print("#### before target :   ", target , "个股仓位比例 :   ", po.quantity*price/eachTargetMoney)
+        if po.quantity ~= want then
+            ret = orderShares(target, math.floor((want-po.quantity)/100)*100)
+            --print("order :",ret,",",want,",",po)
+        end
+        po = portfolio.position(target)
+        print(target ," po.quantity after transaction : ",target,po.quantity,"sellable is : ", po.sellable)
+        print("#### after target :   ", target , "个股仓位比例 :   ", po.quantity*price/eachTargetMoney)
+        lastformula1[target] = formula1
+        lastformula2[target] = formula2
+
+    end
+end
+```
+
+
+高阶指标数据项应该<span style="color:red">至少</span>包含，包含其他指标方便训练出出色的策略。
+
+```
+MA5   : MA(5,CLOSE);
+```
