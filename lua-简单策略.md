@@ -127,7 +127,7 @@ LMA10 : REF(1,MA10);
 
 ### 简单均线交叉加止损，并且加入遗传算法优化
 
-如果需要将10日均线利用遗传算法进行优化成某表达式，并将该表达式和5日均线进行金叉死叉策略，则可以使用以下代码（因为需要使用遗传算法优化一个表达式，因此“可以使用的公式值的数量”填1）：
+如果需要将5日均线利用遗传算法进行优化成某表达式，并将该表达式和10日均线进行金叉死叉策略，则可以使用以下代码（因为需要使用遗传算法优化一个表达式，因此“可以使用的公式值的数量”填1）：
 
 ```lua
 --[[ This is the example codes for the moving average crossover strategy with genetic programming
@@ -136,7 +136,7 @@ lua策略简单样例，该策略的模型框架依然是均线交叉策略，�
 有止损，止损设置在5%
 使用遗传算法优化
 --]]
-local drawdownrate = 0.05 --定义止损比率
+local drawdownrate = 0.20 --定义止损比率
 local hightable = {} -- 定义最高价table
 local lastformula1 = {} -- 定义公式1上一期table
 return function ()
@@ -147,8 +147,8 @@ return function ()
     for target, stat in pairs(bar()) do -- for循环遍历每只股票
         local po = portfolio.position(target) -- 股票持仓状态
         local high = stat['HIGH'] -- 最高价，用于止损计算
-        local MAS= stat['MA5'] -- 5日均线，需在“高阶指标数据项”内添加5日均线
-        local LMAS = stat['LMA5']
+        local MAL= stat['MA10'] -- 10日均线，需在“高阶指标数据项”内添加10日均线
+        local LMAL = stat['LMA10']
         local price = stat['CLOSE'] -- 当前股价
         local formula1 = formula(target,0) -- 训练表达式1，第二个参数是计数，lua语言从0开始计数
         print("formula1:",formula1)
@@ -167,9 +167,9 @@ return function ()
         -- 以下是策略逻辑
         local conditionStopLoss = hightable[target] ~= nil and price<(1-drawdownrate)*hightable[target]
         local conditionBuy = formula1 ~= nil and lformula1 ~= nil
-                and formula1 > MAS and lformula1 < LMAS and po.quantity == 0
+                and formula1 > MAL and lformula1 < LMAL and po.quantity == 0
         local conditionSell = formula1 ~= nil and lformula1 ~= nil
-                and formula1 < MAS and lformula1 > LMAS and po.quantity > 0
+                and formula1 < MAL and lformula1 > LMAL and po.quantity > 0
 
         local want = (function()
             if conditionStopLoss then
