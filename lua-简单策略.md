@@ -185,9 +185,8 @@ return function ()
 
           if po.quantity ~= want then
               ret = orderShares(target, want-po.quantity) -- 下单
-              --print("order :",ret,",",want,",",po)
           end
-          lastformula1[target] = formula1 -- 记录公式1值
+          lastformula1[target] = formula1 -- 记录公式1值，提供给下一周期的计算
       end
   end
 ```
