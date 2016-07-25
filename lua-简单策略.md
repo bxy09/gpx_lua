@@ -4,7 +4,6 @@
 
 以下是简单的均线交叉策略（因为不使用遗传算法，因此“可以使用的公式值的数量”填0）：
 
-
 ```lua
 --[[ This is the example codes for the moving average crossover strategy
 lua策略简单样例，该策略是均线交叉策略，20日均线上传90日均线则全仓买入，20日
@@ -36,14 +35,14 @@ return function ()
             end
             return po.quantity -- 保持持仓
           end)()
-          
+
           if po.quantity ~= want then
               ret = orderShares(target, want-po.quantity) -- 下单
               --print("order :",ret,",",want,",",po)
           end
       end
   end
-```  
+```
 
 高阶指标数据项应该填入以下内容：
 
@@ -56,7 +55,7 @@ LMA90 : REF(1,MA90);
 
 高阶指标数据的填入方式为：
 
-点击 "高阶指标数据项" -> 点击 "使用指标编辑模式" -> 修改 "定义指标公式"。
+点击 "高阶指标数据项" -&gt; 点击 "使用指标编辑模式" -&gt; 修改 "定义指标公式"。
 
 关于高阶指标的帮助，将在近期公布，目前高阶指标中函数的参数设定与一般使用的股票软件工具不相同。将来我们将会将其调整到一致，相应地，用户需要对自己正在使用的指标进行一些调整。
 
@@ -110,7 +109,7 @@ return function ()
             end
             return po.quantity
           end)()
-          
+
           if po.quantity ~= want then
               ret = orderShares(target, want-po.quantity) -- 下单
               --print("order :",ret,",",want,",",po)
@@ -128,6 +127,7 @@ LMA20 : REF(1,MA20);
 LMA90 : REF(1,MA90);
 
 ```
+
 ### 简单均线交叉加止损，并且加入遗传算法优化
 
 如果需要将20日均线利用遗传算法进行优化成某表达式，并将该表达式和90日均线进行金叉死叉策略，则可以使用以下代码（因为需要使用遗传算法优化一个表达式，因此“可以使用的公式值的数量”填1）：
@@ -191,6 +191,7 @@ return function ()
 
           if po.quantity ~= want then
               ret = orderShares(target, want-po.quantity) -- 下单
+              --print("order :",ret,",",want,",",po)
           end
           lastformula1[target] = formula1 -- 记录公式1值，提供给下一周期的计算
       end
