@@ -34,11 +34,11 @@ return function ()
             if MA20 < MA90 and LMA20 > LMA90 and po.quantity > 0 then
               return 0 -- 触发卖出
             end
-            return po.quantity
+            return po.quantity -- 保持持仓
           end)()
           
           if po.quantity ~= want then
-              ret = orderShares(target, math.floor((want-po.quantity)/100)*100) -- 下单
+              ret = orderShares(target, want-po.quantity) -- 下单
               --print("order :",ret,",",want,",",po)
           end
       end
@@ -106,7 +106,7 @@ return function ()
           end)()
           
           if po.quantity ~= want then
-              ret = orderShares(target, math.floor((want-po.quantity)/100)*100) -- 下单
+              ret = orderShares(target, want-po.quantity) -- 下单
               --print("order :",ret,",",want,",",po)
           end
       end
@@ -184,7 +184,7 @@ return function ()
           end)()
 
           if po.quantity ~= want then
-              ret = orderShares(target, math.floor((want-po.quantity)/100)*100) -- 下单
+              ret = orderShares(target, want-po.quantity) -- 下单
               --print("order :",ret,",",want,",",po)
           end
           lastformula1[target] = formula1 -- 记录公式1值
