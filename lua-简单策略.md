@@ -147,8 +147,7 @@ return function ()
     for target, stat in pairs(bar()) do -- for循环遍历每只股票
         local po = portfolio.position(target) -- 股票持仓状态
         local high = stat['HIGH'] -- 最高价，用于止损计算
-        local MAS= stat['MA5'] -- 5日均线，续在“高阶指标数据项”内添加20日均线
-        --local MAL = stat['MA10'] -- 10日均线，续在“高阶指标数据项”内添加90日均线
+        local MAS= stat['MA5'] -- 5日均线，需在“高阶指标数据项”内添加5日均线
         local LMAS = stat['LMA5']
         local price = stat['CLOSE'] -- 当前股价
         local formula1 = formula(target,0) -- 训练表达式1，第二个参数是计数，lua语言从0开始计数
