@@ -22,4 +22,4 @@ tostring
 3. [账户相关函数](account_functions.md)
 4. [其他函数](other_functions.md)
 5. [Lua 15 分钟快速入门（适合有编程基础的用户）](lua_15min.md)
-6. [Lua 简单范例]()
+6. [Lua 简单范例](lua_简单策略.md)
