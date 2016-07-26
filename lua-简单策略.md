@@ -385,8 +385,12 @@ end
 ```
 
 
-高阶指标数据项应该<span style="color:red">至少</span>包含，包含其他指标方便训练出出色的策略。
+高阶指标数据项应该<span style="color:red">至少</span>包含以下指标。
 
 ```
 MA5   : MA(5,CLOSE);
 ```
+
+再添加其他指标方便训练出出色的策略。
+
+[回到目录](README.md)
